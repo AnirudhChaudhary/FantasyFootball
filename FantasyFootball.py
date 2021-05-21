@@ -1,4 +1,5 @@
-#Beautiful Soup Demo
+#Fantasy Football
+
 '''
 import requests
 from bs4 import BeautifulSoup
@@ -103,12 +104,33 @@ class Battlefield:
             
             
 
-    def pathways(player_data, target, money,iteration):
-        print("\n")
-        print("Money: " + str(money) + "    Target: " + str(target))  #Starting money and desired target
-        total = []
-        #if check_further_possible(player_data[0], 
+    def pathways(playerData, target, money):
+        if not playerData or Battlefield.overshoot(playerData[0], target, money):
+            return
+        
+        elif Battlefield.hitTarget(playerData[0], target, money):
+            return playerData[0].name
+        
+        else:
+            #If there is a path, these should return a list of the names that lead up to the target
+            first = Battlefield.pathways(playerData[1:], target - playerData[0].value, money - playerData[0].cost)   #Assume we take the first, find the best out of the remaining
+            second = Battlefield.pathways(playerData[1:], target, money)
 
+            if first:
+                return first + " " + playerData[0].name
+            return second
+
+    def hitTarget(player, target, money):
+        if target - player.value == 0 and money - player.cost >= 0:
+            return True
+        else:
+            return False
+
+    def overshoot(player, target, money):
+        if target - player.value < 0 or money - player.cost < 0:
+            return True
+        else:
+            return False
 
 def main():
     print(Battlefield.playerData)
@@ -117,6 +139,8 @@ def main():
     
     points = Battlefield.find_max_points(Battlefield.playerData, 10)
     print(points)
+
+    print(Battlefield.pathways(Battlefield.playerData, points, 10))
     #store = [['a', 1, 2], ['d', 1, 6], ['f', 7, 8], ['h', 100, 4]]
     #print(store)
     #max_points = find_max_points(store, 10)
