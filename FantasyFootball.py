@@ -45,7 +45,8 @@ This class will be where the crux of the calculations happen.
 """
 class Battlefield:
     #This variable is set to be public because we want all Battlefield instances to access all players
-    playerData = []
+    playerData = {}
+    num_positions = 2   #Can decide to make this variable later
 
     def __init__(self):
         self.QB = None
@@ -69,7 +70,15 @@ class InputOutput:
     """
     def store_player_data_manually():
         # TODO: FIX PLAYER INPUT (IE BAD INPUTS)
+
         player,flag = None, True
+        while flag:
+            print("First I need to know how many different positions there are. List out the position or write 'done'")
+            pos = input("Position: ")
+            if pos == "done":
+                break
+            else:
+                Battlefield.playerData[pos] = []
         while flag:
             name = input("Player: ")
             name = name.upper()
@@ -79,14 +88,16 @@ class InputOutput:
                 points = float(input("Projected Points: "))
                 cost = float(input("Cost?: "))
                 p = Player(name, position, cost, points)
-                Battlefield.playerData.append(p)
+                Battlefield.playerData[position].append(p)
                 flag = True
 
     """
     This function is responsible for collecting user input data regarding players in bulk using predefined data in the input list.
     """
-    def store_player_data_bulk(input_list):
+    def store_player_data_bulk(input_list, position_list):
         counter = 0 
+        for position in position_list:
+            Battlefield.playerData[position] = []
         num_players = len(input_list)
         while counter < num_players:
             current_player = input_list[counter]
@@ -96,7 +107,7 @@ class InputOutput:
             points = current_player[3]
 
             p = Player(name, position, cost, points)
-            Battlefield.playerData.append(p)
+            Battlefield.playerData[position].append(p)
 
             counter += 1
 
@@ -149,12 +160,31 @@ class Util:
     Output:
         integer -> the maximum number of points that you can receive with the given playerData money, and field
     """
-    def find_max_points(playerData, money, field):
-        #Exit Case: Player List empty or run out of money
-        if not playerData or money < 0:        
-            return 0
+    def find_max_points(money, field):
 
+        #Exit Case: Battlefield is full or run out of money
+        if len(field) == Battlefield.num_positions or money < 0:
+            return 0
         
+        #Go through all of the possible positions and find one that we haven't set yet
+        for position in Battlefield.playerData.keys():
+                if position not in field:
+                        starting_position = position
+                        break
+
+        #Now that we have our starting position, go through all of the possible candidates for that position
+        #For each candidate, you want to add the value of picking that candidate and then take away the cost for that candidate
+
+        max_points = 0
+        for player in Battlefield.playerData[position]:
+            new_money = money - player.cost
+            field.append(position)
+            curr_points = Util.find_max_points(new_money, position)
+
+            if curr_points > max_points:
+                max_points = curr_points
+
+        return max_points
             
     """
     Finds and returns the pathways to the max amount of points
@@ -233,13 +263,15 @@ def test_regular():
     print("***** TESTING REGULAR ***** \n")
 
     bank = 10
-    inp = [['a', 1, 2], ['d', 1, 6], ['f', 7, 8], ['h', 100, 4]]
+    inp = [['a', 'QB', 1, 2], ['d','QB', 1, 6], ['f', 'RB', 7, 8], ['h', 'RB', 100, 4]]
 
-    InputOutput.store_player_data_bulk(inp)
+    InputOutput.store_player_data_bulk(inp, ['QB', 'RB'])
 
-    final = Util.find_max_points(Battlefield.playerData, bank)
+    #print(Battlefield.playerData)
 
-    print(final)
+    final = Util.find_max_points(Battlefield.playerData, bank, [])
+
+    #print(final)
 
     return
 
