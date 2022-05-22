@@ -1,125 +1,184 @@
 #Fantasy Football
 
-'''
-import requests
-from bs4 import BeautifulSoup
+"""
+Current Objective:
 
-web_link= "https://www.teamrankings.com/nfl/player-stat/quarterback-wins"
-result = requests.get(web_link)
+2. Need to consider players based off of their positions as well. Perhaps this could be done by creating another variable in the battlefield class
+that represents what players have already been picked. You could optimize player selection to only cases where you would actually need that player
 
-#404 - Content not present   200 - present and ok
-print(result.status_code)
+Notes: Perhaps need to change how classes work and interact with one another
 
-#Content
-src = result.content
+Player Class: handles all methods related to players regarding cost, position, value and name
+Battlefield Class: handles what players we have chosen and what positions they inhabit
+Analytics Class: Takes in a list of players and the battlefield that we have and finds the best path with the players available and battlefield
 
-soup = BeautifulSoup(src,'lxml')
+Be able to take a list of players, their costs, and their values and construct a list of players that are most optimal
 
-links = soup.find_all("td")
-#titles = soup.find(class="text-right")
-#print(titles)
-print("\n")
+Future Objectives:
+1. Incorporate multipliers for players that we think are going to perform exceptionally well. This would be another case to add to the "dynamic program"
+For every player we consider adding the player as a normal player, adding as a multiplied player, or not adding the player
 
 
-#player = input("Who's passing attempts would you like to know?")
 
-
-class Player(name):
-    def __init__(self,name):
-        self.name = name
-
-#
-
-def passing_attempts(player):
-    
-    Given a player, this program will find how many passing attempts that player has
-    had so far in the season from "https://www.teamrankings.com/nfl/player-stat/passing-plays-completed"
-    
-    counter = 0
-    loop = True
-    while loop:
-        try:
-            lol = links[counter].attrs['data-sort']
-            if player in lol:
-                print(player + " has {0} wins".format((int(links[counter+3].attrs['data-sort']))%1000))
-                loop = False
-        except:
-            pass
-        counter += 1
-
-#passing_attempts(player)
-'''
+3. Need to make the test case situation much better. Create a better framework for the way that I create tests. Need to make assertions rather than
+just print statements.
+"""
 """
 This is a player class that stores Player Objects.
 """
+import sys
+from FF_Testing import test_func
+
+
 class Player:
-    def __init__(self, name, cost, value):
+    def __init__(self, name, position, cost, value):
         self.name = name
+        self.position = position
         self.cost = cost
         self.value = value
-        
-    def getName(self):
-        return self.name
 
-    def getCost(self):
-        return self.cost
-
-    def getValue(self):
-        return self.value
+    def __repr__(self):
+        return "\nPlayer: %s, Position: %s, Cost: %s, Value: %s" % (self.name, self.position, self.cost, self.value)
 
 """
 This class will be where the crux of the calculations happen.
 """
 class Battlefield:
+    #This variable is set to be public because we want all Battlefield instances to access all players
     playerData = []
-    
+
+    def __init__(self):
+        self.QB = None
+        self.RB = None
+        #self.WR1 = None
+        #self.WR2 = None
+        #self.FLEX = None
+
     """
-    This function is resposible for collecting all of the user input data regarding players"""
-    def store_player_data():
+    Returns the player at the specified index
+    """
+    def getPlayerAt(index):
+        return Battlefield.playerData[index]
+
+
+class InputOutput:
+    """
+    This function is resposible for collecting all of the user input data regarding players from a manually user input.
+
+    Position handling: √
+    """
+    def store_player_data_manually():
+        # TODO: FIX PLAYER INPUT (IE BAD INPUTS)
         player,flag = None, True
         while flag:
             name = input("Player: ")
+            name = name.upper()
             flag = False
-            if name != "Done":
-                points = int(input("Projected Points: "))
-                cost = int(input("Cost?: "))
-                p = Player(name, cost, points)
+            if name != "DONE":
+                position = input("Position: ")
+                points = float(input("Projected Points: "))
+                cost = float(input("Cost?: "))
+                p = Player(name, position, cost, points)
                 Battlefield.playerData.append(p)
                 flag = True
 
-    def getPlayerAt(index):
-        return Battlefield.playerData[index]
-    
-    def find_max_points(playerData, money):
-        if not playerData or money < 0:        #Exit Case: Player List empty or run out of money
+    """
+    This function is responsible for collecting user input data regarding players in bulk using predefined data in the input list.
+    """
+    def store_player_data_bulk(input_list):
+        counter = 0 
+        num_players = len(input_list)
+        while counter < num_players:
+            current_player = input_list[counter]
+            name = current_player[0]
+            position = current_player[1]
+            cost = current_player[2]
+            points = current_player[3]
+
+            p = Player(name, position, cost, points)
+            Battlefield.playerData.append(p)
+
+            counter += 1
+
+        return
+
+class Util:
+    """
+    Given a list of players in player data and the allocated money, returns the max amount of points possible. This is not
+    taking into consideration who the player is. Rather this is just trying to find the max amount and then a different function
+    will try to find the order that created this max.
+
+    Input: 
+        playerData -> List of player data [name, position, cost, value]
+        money -> int: represents how much money you have left to work with
+
+    Output:
+        integer -> the maximum number of points that you can receive with the given playerData money, and field
+    """
+    def find_max_points_old(playerData, money, field):
+        #Exit Case: Player List empty or run out of money
+        if not playerData or money < 0:        
             return 0
+
+        #established that we have a player, need to decide what to do with that player
         else:
-            if money - playerData[0].cost >= 0:
-                first = playerData[0].value + Battlefield.find_max_points(playerData[1:], money - playerData[0].cost)
-                second =  Battlefield.find_max_points(playerData[1:], money)
-                return max(first,second)
+            player = playerData[0]
+            if money - player.cost >= 0:
+                #Don't choose the player, so we keep our field the same
+                no_choose_player =  Util.find_max_points(playerData[1:], money)
+
+                #Choose the player so have to change the position in the field and also make sure that we subtract the cost that might come along with that
+
+                choose_player = playerData[0].value + Util.find_max_points(playerData[1:], money - player.cost)
+                
+                return max(choose_player,no_choose_player)
             
             else:
                 return 0
-            
-            
 
+    """
+    Given a list of players in player data and the allocated money, returns the max amount of points possible. This is not
+    taking into consideration who the player is. Rather this is just trying to find the max amount and then a different function
+    will try to find the order that created this max.
+
+    Input: 
+        playerData -> List of player data [name, position, cost, value]
+        money -> int: represents how much money you have left to work with
+        field -> list tells us what position we have chosen so far
+
+    Output:
+        integer -> the maximum number of points that you can receive with the given playerData money, and field
+    """
+    def find_max_points(playerData, money, field):
+        #Exit Case: Player List empty or run out of money
+        if not playerData or money < 0:        
+            return 0
+
+        
+            
+    """
+    Finds and returns the pathways to the max amount of points
+    """
     def pathways(playerData, target, money):
-        if not playerData or Battlefield.overshoot(playerData[0], target, money):
+        if not playerData or Util.overshoot(playerData[0], target, money):
             return
         
-        elif Battlefield.hitTarget(playerData[0], target, money):
+        elif Util.hitTarget(playerData[0], target, money):
             return playerData[0].name
         
         else:
             #If there is a path, these should return a list of the names that lead up to the target
-            first = Battlefield.pathways(playerData[1:], target - playerData[0].value, money - playerData[0].cost)   #Assume we take the first, find the best out of the remaining
-            second = Battlefield.pathways(playerData[1:], target, money)
+            first = Util.pathways(playerData[1:], target - playerData[0].value, money - playerData[0].cost)   #Assume we take the first, find the best out of the remaining
+            second = Util.pathways(playerData[1:], target, money)
 
             if first:
                 return first + " " + playerData[0].name
             return second
 
+    '''
+    Perhaps the next thing to do here would have these two functions merge into one function that can return 'hit' or
+    'overshoot'
+    '''
     def hitTarget(player, target, money):
         if target - player.value == 0 and money - player.cost >= 0:
             return True
@@ -132,39 +191,112 @@ class Battlefield:
         else:
             return False
 
-def main():
-    print(Battlefield.playerData)
-    
-    Battlefield.store_player_data()
-    
-    points = Battlefield.find_max_points(Battlefield.playerData, 10)
-    print(points)
 
-    print(Battlefield.pathways(Battlefield.playerData, points, 10))
+def main():
+    test_type = input("Would you like to run all tests (test) or validate (validate)? ")
+
+    if test_type == "test":
+        testing()
+    else:
+        validation()
+    return
+
+"""
+This is the function that will be used for testing different scenarios and to make sure that all test cases are passsing.
+
+"""
+def testing():
+    #test_same_val()
+    #test_not_enough_bank()
+    test_regular()
+    #test_positions_once()
+
+"""
+Testing if position handling is working properly
+"""
+def test_positions_once():
+    print("***** TESTING POSITION HANDLING ***** \n")
+
+    bank = 10
+    inp = [['a', 'QB', 3,3], ['b', 'RB', 4,4]]
+
+    InputOutput.store_player_data_bulk(inp) #inputting looks to be fine
+
+    initial = Battlefield()
+
+    Util.find_max_points(Battlefield.playerData, bank, "QB")
+
+
+    return
+
+def test_regular():
+    print("***** TESTING REGULAR ***** \n")
+
+    bank = 10
+    inp = [['a', 1, 2], ['d', 1, 6], ['f', 7, 8], ['h', 100, 4]]
+
+    InputOutput.store_player_data_bulk(inp)
+
+    final = Util.find_max_points(Battlefield.playerData, bank)
+
+    print(final)
+
+    return
+
+
+"""
+Testing if our function works with all the players having the same value.
+"""
+def test_same_val():
+    print("TESTING SAME VAL")
+    bank = 3
+    inp = [['a',3,3], ['b',3,3], ['c',3,3]]
+    
+    InputOutput.store_player_data_bulk(inp)
+
+    points = Util.find_max_points(Battlefield.playerData, bank)
+    #points = Battlefield.find_max_points(store, bank)
+    print("MAX POINTS POSSIBLE: ", points)
+    assert(points == 3)
+
+    print("PLAYERS THAT YOU SHOULD PICK: ", Util.pathways(Battlefield.playerData, points, bank))
+    #print("PLAYERS THAT YOU SHOULD PICK: ", Battlefield.pathways(store, points, bank))
+
+"""
+Test that we don't get an output if we don't have enough money in the bank to begin with. 
+"""
+def test_not_enough_bank():
+    print("TESTING NOT ENOUGH BANK")
+    bank = 2
+    inp = [['a',3,3], ['b',3,3], ['c',3,3]]
+    
+    Battlefield.store_player_data_bulk(inp)
+
+    points = Battlefield.find_max_points(Battlefield.playerData, bank)
+    #points = Battlefield.find_max_points(store, bank)
+    print("MAX POINTS POSSIBLE: ", points)
+    #assert(points == 3)
+
+    print("PLAYERS THAT YOU SHOULD PICK: ", Battlefield.pathways(Battlefield.playerData, points, bank))
+    #print("PLAYERS THAT YOU SHOULD PICK: ", Battlefield.pathways(store, points, bank))
+    
+
+
+
+def validation():
+    bank = int(input("How much money is avaliable? "))
+    
+    Battlefield.store_player_data_manually()
     #store = [['a', 1, 2], ['d', 1, 6], ['f', 7, 8], ['h', 100, 4]]
+    points = Battlefield.find_max_points(Battlefield.playerData, bank)
+    #points = Battlefield.find_max_points(store, bank)
+    print("MAX POINTS POSSIBLE: ", points)
+
+    print("PLAYERS THAT YOU SHOULD PICK: ", Battlefield.pathways(Battlefield.playerData, points, bank))
+    #print("PLAYERS THAT YOU SHOULD PICK: ", Battlefield.pathways(store, points, bank))
+    
     #print(store)
     #max_points = find_max_points(store, 10)
     
 
 main()
-#max_points(store_player_data(), 3)
-
-
-#print(max_subseq(2567,5))
-'''
-
-            print("Testing: " + str(player_data[0][0]))
-            print("\n")
-            first = pathways(player_data[1:], target - player_data[0][1], money - player_data[0][2], iteration + 1)
-            print(first)
-            if first:
-                first = [player_data[0][0]] + first
-            print(player_data[1:])
-            print("Below is second")
-            second = pathways(player_data[1:], target, money, iteration + 1)
-            
-            #print(list(first))
-            #print(list(second))
-            print("First + Second: " + str(first + second))
-            return first + second
-'''
