@@ -166,6 +166,10 @@ class Util:
         if len(field) == Battlefield.num_positions or money < 0:
             return 0
         
+        #print("PLAYER DATA: ", Battlefield.playerData)
+
+        #print("FIELD: ", field)
+        
         #Go through all of the possible positions and find one that we haven't set yet
         for position in Battlefield.playerData.keys():
                 if position not in field:
@@ -176,13 +180,17 @@ class Util:
         #For each candidate, you want to add the value of picking that candidate and then take away the cost for that candidate
 
         max_points = 0
+        new_field = field.copy()
         for player in Battlefield.playerData[position]:
             new_money = money - player.cost
-            field.append(position)
-            curr_points = Util.find_max_points(new_money, position)
+            new_field.append(position)
+            
+            curr_points = player.value + Util.find_max_points(new_money, new_field)
 
             if curr_points > max_points:
                 max_points = curr_points
+            
+            new_field = field
 
         return max_points
             
@@ -239,7 +247,7 @@ def testing():
     #test_same_val()
     #test_not_enough_bank()
     test_regular()
-    #test_positions_once()
+    test_positions_once()
 
 """
 Testing if position handling is working properly
@@ -250,11 +258,12 @@ def test_positions_once():
     bank = 10
     inp = [['a', 'QB', 3,3], ['b', 'RB', 4,4]]
 
-    InputOutput.store_player_data_bulk(inp) #inputting looks to be fine
+
+    InputOutput.store_player_data_bulk(inp, ['QB', 'RB']) #inputting looks to be fine
 
     initial = Battlefield()
 
-    Util.find_max_points(Battlefield.playerData, bank, "QB")
+    print("final: ", Util.find_max_points(bank, []))
 
 
     return
@@ -263,15 +272,15 @@ def test_regular():
     print("***** TESTING REGULAR ***** \n")
 
     bank = 10
-    inp = [['a', 'QB', 1, 2], ['d','QB', 1, 6], ['f', 'RB', 7, 8], ['h', 'RB', 100, 4]]
+    inp = [['a', 'QB', 1, 2], ['d','QB', 1, 6], ['f', 'RB', 7, 8], ['h', 'RB', 4, 100]]
 
     InputOutput.store_player_data_bulk(inp, ['QB', 'RB'])
 
     #print(Battlefield.playerData)
 
-    final = Util.find_max_points(Battlefield.playerData, bank, [])
+    final = Util.find_max_points(bank, [])
 
-    #print(final)
+    print(final)
 
     return
 
