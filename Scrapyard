@@ -1,0 +1,184 @@
+"""
+A. The piece of code below was responsible for finding the actual players to be chosen that give us the highest point output. This got changed and integrated with the actual
+find max points function
+"""
+
+'''
+    """
+
+    This function is responsible for giving us our current status.
+    Input: 
+        - player: player that we are considering
+        - target: The target value that we are trying to reach
+        - money: Amount of money that we have left to work with
+    
+    Output:
+        "hit" - means that we have hit our target without going over the money requirements
+        "overshoot" - means that we cannot meet the target with the current money
+
+
+    """
+    def status(player, target, money):
+        if target - player.value == 0 and money - player.cost >= 0:
+            return "hit"
+        elif target - player.value < 0 or money - player.cost < 0:
+            return "overshoot"
+        else:
+            return "no stop"
+
+    
+    Perhaps the next thing to do here would have these two functions merge into one function that can return 'hit' or
+    'overshoot'
+    
+    def hitTarget(player, target, money):
+        if target - player.value == 0 and money - player.cost >= 0:
+            return True
+        else:
+            return False
+
+    def overshoot(player, target, money):
+        if target - player.value < 0 or money - player.cost < 0:
+            return True
+        else:
+            return False
+
+'''
+
+
+"""
+B. Below is the material that I used when dealing with web data crawling
+"""
+'''
+
+First we organize our players into categories based on their positions. 
+
+We make a call to FMP with an empty list to denote that we have not added any players yet
+
+Then as we are going through our recursive calls, one of the big points is to make sure that every position is filled with at least one person
+
+So how we enforce that is by adding the player position to the list if we have decided to add that player. If we encounter a player 
+that comes later in the sequence that we should have seen before then we stop immediately because we did not pick a position beforehand 
+and thus the ordering would be invalid
+
+now the question is how do we fix the ordering of the sequence?
+
+    One solution is to create a numbering such that each position represents a number and you can't add another number to the sequence unless
+    it's predecessor has been seen in the list.
+
+Also once we have a player chosen, then we dont need to choose any of the rest of the players so we can move on to the next list and choose from them
+    The way that we can get this done is by creating a dictionary with the player position being the key and all of the possible players
+    being the corresponding value for that key
+
+Then we go through all the players in a category and pick whether we want to pick that player or not pick that player
+
+'''
+
+'''
+import requests
+#Use Beautiful Soup to parse through webpage information and extract desired information
+from bs4 import BeautifulSoup
+
+#This is the weblink where we will be getting information from
+web_link= "https://www.teamrankings.com/nfl/player-stat/quarterback-wins"
+result = requests.get(web_link)
+
+#404 - Content not present   200 - present and ok
+print(result.status_code)
+
+#Content that we get from the web link call
+src = result.content
+
+soup = BeautifulSoup(src,'lxml')
+
+#This is our query, the thing that we are looking for
+links = soup.find_all("td")
+#titles = soup.find(class="text-right")
+#print(titles)
+print("\n")
+
+
+#player = input("Who's passing attempts would you like to know?")
+
+
+class Player(name):
+    def __init__(self,name):
+        self.name = name
+
+#
+
+def passing_attempts(player):
+    
+    Given a player, this program will find how many passing attempts that player has
+    had so far in the season from "https://www.teamrankings.com/nfl/player-stat/passing-plays-completed"
+    
+    counter = 0
+    loop = True
+    while loop:
+        try:
+            lol = links[counter].attrs['data-sort']
+            if player in lol:
+                print(player + " has {0} wins".format((int(links[counter+3].attrs['data-sort']))%1000))
+                loop = False
+        except:
+            pass
+#passing_attempts(player)
+        counter += 1
+
+'''
+"""
+C. This is the old version of the find max points and it just handled choosing or not choosing a player to find the maximum number of points
+"""
+'''
+"""
+    Given a list of players in player data and the allocated money, returns the max amount of points possible. This is not
+    taking into consideration who the player is. Rather this is just trying to find the max amount and then a different function
+    will try to find the order that created this max.
+
+    Input: 
+        playerData -> List of player data [name, position, cost, value]
+        money -> int: represents how much money you have left to work with
+
+    Output:
+        integer -> the maximum number of points that you can receive with the given playerData money, and field
+    """
+    def find_max_points_old(playerData, money, field):
+        #Exit Case: Player List empty or run out of money
+        if not playerData or money < 0:        
+            return 0
+
+        #established that we have a player, need to decide what to do with that player
+        else:
+            player = playerData[0]
+            if money - player.cost >= 0:
+                #Don't choose the player, so we keep our field the same
+                no_choose_player =  Util.find_max_points(playerData[1:], money)
+
+                #Choose the player so have to change the position in the field and also make sure that we subtract the cost that might come along with that
+
+                choose_player = playerData[0].value + Util.find_max_points(playerData[1:], money - player.cost)
+                
+                return max(choose_player,no_choose_player)
+            
+            else:
+                return 0
+
+    """
+    Finds and returns the pathways to the max amount of points
+    """
+    def old_pathways(playerData, target, money):
+        if not playerData or Util.overshoot(playerData[0], target, money):
+            return
+        
+        elif Util.hitTarget(playerData[0], target, money):
+            return playerData[0].name
+        
+        else:
+            #If there is a path, these should return a list of the names that lead up to the target
+            first = Util.pathways(playerData[1:], target - playerData[0].value, money - playerData[0].cost)   #Assume we take the first, find the best out of the remaining
+            second = Util.pathways(playerData[1:], target, money)
+
+            if first:
+                return first + " " + playerData[0].name
+            return second
+
+'''
