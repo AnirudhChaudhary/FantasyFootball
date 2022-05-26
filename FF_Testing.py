@@ -9,14 +9,61 @@ import FantasyFootball as FF
 def testing():
     #test_same_val()
     #test_not_enough_bank()
-    test_regular()
-    test_positions_once()
-    test_not_all_positions()
-    test_multiple_positions()
+    #test_regular()
+    #test_positions_once()
+    #test_not_all_positions()
+    #test_multiple_positions()
+    #test_multiple_same_position()
+    test_simple()
+    print("\n")
+    test_multiple_multipliers()
+    #test_multiple_multipliers_small()
 
 """
 Testing if position handling is working properly
 """
+
+def test_simple():
+    bank = 10
+
+    inp = [['a', 'QB', 9, 1], ['b', 'RB', 1, 4], ['c', 'QB', 1, 5]]
+    multipliers = [2,1]
+
+    FF.InputOutput.store_player_data_bulk(inp, ['QB', 'RB'])
+    
+    final = FF.Util.find_max_points(bank,[], multipliers, None)
+
+    assert(final[0] == 14)
+
+    print(final)
+    print("\n")
+
+def test_multiple_multipliers():
+    bank = 10
+    inp = [['a', 'QB', 2, 1], ['b', 'RB', 1, 4], ['c', 'WR', 1, 5]]
+
+    multipliers = [2, 1.5, 1]
+
+    FF.InputOutput.store_player_data_bulk(inp, ['QB', 'RB', 'WR'])
+    
+    final = FF.Util.find_max_points(bank,[], multipliers, None)
+
+    print(final)
+    print("Expected: 17")
+
+def test_multiple_multipliers_small():
+    bank = 10
+    inp = [['a', 'QB', 2, 1], ['b', 'RB', 1, 4]]
+    multipliers = [2,1]
+
+    FF.InputOutput.store_player_data_bulk(inp, ['QB', 'RB'])
+    
+    final = FF.Util.find_max_points(bank,[], multipliers, None)
+
+    print(final)
+    print("Expected: 9")
+
+
 
 def test_regular():
     print("***** TESTING REGULAR ***** \n")
@@ -32,6 +79,7 @@ def test_regular():
     final = FF.Util.find_max_points(bank, [])
 
     print(final)
+    FF.Battlefield.reset()
 
     return
 
@@ -45,6 +93,7 @@ def test_positions_once():
     FF.InputOutput.store_player_data_bulk(inp, ['QB', 'RB']) #inputting looks to be fine
 
     print("final: ", FF.Util.find_max_points(bank, []))
+    FF.Battlefield.reset()
     return
 
 def test_not_all_positions():
@@ -58,9 +107,10 @@ def test_not_all_positions():
 
     #print(Battlefield.playerData)
 
-    final = FF.Util.find_max_points(bank, [])
+    final = FF.Util.find_max_points(bank, [],)
 
     print(final)
+    FF.Battlefield.reset()
 
     return
 
@@ -75,36 +125,47 @@ def test_multiple_positions():
 
     final = FF.Util.find_max_points(bank, [])
 
+    FF.Battlefield.reset()
+
     print(final)
 
     return
 
-"""
-Test that we don't get an output if we don't have enough money in the bank to begin with. 
-"""
 
-def validation():
+def test_multiple_same_position():
+
+    print("\n***** TESTING PICK MULTIPLE OF SAME PLAYER *****")
+
+    bank = 10
+    #[name, position, cost, value]
+    inp = [['nooooo', 'QB', 10, 100], ['a', 'QB', 5, 25], ['b', 'RB1', 3, 25], ['c', 'RB2', 2, 35]]
+
+    FF.InputOutput.store_player_data_bulk(inp, ['QB', 'RB1', 'RB2'])
+
+    final = FF.Util.find_max_points(bank, [])
+
+    print(final)
+    FF.Battlefield.reset()
+
+    return
+
+def manual():
     bank = int(input("How much money is avaliable? "))
     FF.InputOutput.store_player_data_manually()
     #store = [['a', 1, 2], ['d', 1, 6], ['f', 7, 8], ['h', 100, 4]]
     points = FF.Util.find_max_points(bank, [])
-    #points = Battlefield.find_max_points(store, bank)
-    print("MAX POINTS POSSIBLE: ", points)
 
-    #print("PLAYERS THAT YOU SHOULD PICK: ", Battlefield.pathways(store, points, bank))
-    
-    #print(store)
-    #max_points = find_max_points(store, 10)
+    return points
     
     
 
 def main():
-    test_type = input("Would you like to run all tests (test) or validate (validate)? ")
+    test_type = input("Would you like to run all tests (test) or manually enter data (manual)? ")
 
     if test_type == "test":
         testing()
     else:
-        validation()
+        manual()
     return
 
 main()

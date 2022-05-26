@@ -12,7 +12,7 @@ class Player:
         self.value = value
 
     def __repr__(self):
-        return "\nPlayer: %s, Position: %s, Cost: %s, Value: %s" % (self.name, self.position, self.cost, self.value)
+        return "Player: %s, Position: %s, Cost: %s, Value: %s" % (self.name, self.position, self.cost, self.value)
 
 """
 This class will be where the crux of the calculations happen.
@@ -20,7 +20,13 @@ This class will be where the crux of the calculations happen.
 class Battlefield:
     #This variable is set to be public because we want all Battlefield instances to access all players
     playerData = {}
-    num_positions = 0   
+    num_positions = 0 
+
+    #This function resets the Battlefield back to it's default orientation. There was a bug where the testing function calls were 
+    #persistently affecting the battlefield over multiple function calls
+    def reset():
+        Battlefield.playerData = {}
+        Battlefield.num_positions = 0
 
 
 class InputOutput:
@@ -32,16 +38,7 @@ class InputOutput:
 
         want_to_add_player, want_to_add_position = True, True
         num_positions = 0 
-        # print("First I need to know how many different positions there are. List out the position or write 'done' \n")
-        # while want_to_add_position:
-        #     pos = input("Position: ")
-        #     if pos == "done":
-        #         want_to_add_player = False
-        #     else:
-        #         Battlefield.playerData[pos] = []
-        #         num_positions += 1
-        # #update our battlefield to store the number of positions that we want to consider
-        # Battlefield.num_positions = num_positions
+
         while want_to_add_player:
             name = input("Player: ")
             name = name.upper()
@@ -84,6 +81,8 @@ class InputOutput:
 
             counter += 1
 
+        #print(Battlefield.playerData)
+
         return
 
 class Util:
@@ -100,13 +99,31 @@ class Util:
     Output:
         integer -> the maximum number of points that you can receive with the given playerData money, and field
     """
-    def find_max_points(money, field):
+    def find_max_points(money,field, multipliers):
+        final_tuple = Util.find_max_points_helper(money, field, multipliers)
+        max_points = final_tuple[0]
+        final_arrangement = final_tuple[1]
+        if len(final_arrangement) != Battlefield.num_positions:
+            print("FINAL ARRANGMENT: ", final_arrangement)
+            print("Invalid arrangment")
+        else:
+            print("MAX POINTS: ", max_points)
+            print("ARRANGEMENT: ", final_arrangement)
+        
+        return (0,0)
+
+
+
+    def find_max_points_helper(money, field, multipliers):
+        #print(multipliers)
         #print("FIELD: ", field)
         # Ran out of money so we shouldn't include the player (maybe need to use negative infinity)
         if money < 0 or (money == 0 and len(field) != Battlefield.num_positions):
+            #print("ah here")
             return (float("-inf"),[])
         
         if len(field) == Battlefield.num_positions:
+            #print("ah here 2")
             return (0, [])
         
         #Go through all of the possible positions and find one that we haven't set yet
@@ -115,27 +132,58 @@ class Util:
                         starting_position = position
                         break
         
-        
+        #print("CHOOSING: ", starting_position)
         max_points = 0
         final_arrangement = []
         #temp field stores a copy of field so that we can add different position players
-        temp_field = field.copy()
+        original_field = field.copy()
+        flexible_field = field.copy()
+        #print(original_field)
+        #print(field)
+        #print(Battlefield.playerData[starting_position])
         for player in Battlefield.playerData[starting_position]:
+            #print("TEMP FIELD: ",temp_field)
             new_money = money - player.cost
-            temp_field.append(position)
+            flexible_field.append(starting_position)
 
-            rest_tuple = Util.find_max_points(new_money, temp_field)
-            
-            curr_points = player.value + rest_tuple[0]
-            rest_tuple[1].append(player.name)
-            arrangement = rest_tuple[1]
+            #At this stage, we can choose what multiplier to give to our player or no multiplier
+            original_multipliers = multipliers.copy()
+            for multiplier in original_multipliers:
+                #print("Multiplier: ", multiplier)
+                #print("POSITION: ", starting_position)
+                #print("BEFORE CALL FIELD: ", flexible_field)
+                #print("\n")
+                #print("multipliers before: ", multipliers)
+                multipliers.remove(multiplier)
+                #print("multipliers after: ", multipliers)
+                #print("\n")
+                
+                tuple_with_current_multiplier = Util.find_max_points_helper(new_money, flexible_field, multipliers)
+                #print("POSITION AFTER: ", starting_position)
+                #print("AFTER CALL FIELD: ", flexible_field)
+                #print("Exit out of recursive call")
 
-            if curr_points > max_points:
-                max_points = curr_points
-                final_arrangement = arrangement 
+                points_w_curr_mult = tuple_with_current_multiplier[0]
+                arrange_w_curr_mult = tuple_with_current_multiplier[1]
+                curr_points = player.value * multiplier + points_w_curr_mult
 
-            temp_field = field
+                arrange_w_curr_mult.append(player.name)
+                arrangement = arrange_w_curr_mult
 
+                if curr_points > max_points:
+                    #print("UPDATED MAX: ", curr_points)
+                    max_points = curr_points
+                    final_arrangement = arrangement 
+                multipliers = original_multipliers.copy()
+
+                #print("Finished one multiplier: ", multiplier)
+
+            #print("Done with multipliers")
+                
+            #print("PLAYER I JUST FINISHED: ", player)
+            flexible_field = original_field.copy()
+            #print("field after multipliers: ", field)
 
         return (max_points, final_arrangement)
 
+    
