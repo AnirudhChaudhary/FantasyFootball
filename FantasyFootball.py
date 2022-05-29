@@ -99,6 +99,60 @@ class Util:
     Output:
         integer -> the maximum number of points that you can receive with the given playerData money, and field
     """
+
+    def find_max_points_no_positions(money,chosenPlayers, multipliers):
+        '''
+        This is the function that we will use to find out what players to pick, assuming we are in a competition where there are no restrictions on 
+        what players we choose.
+
+        The multipliers will be our base case, telling us when we need to stop
+        '''
+        #print("Starting Function with: ", chosenPlayers)
+
+        #If we used too much money then we can't take the arrangement into consideration so return negative inf to make sure arrangement isn't considered
+        if money < 0 or (money == 0 and len(chosenPlayers) != Battlefield.num_positions):
+            #print("ran out of money")
+            return (float("-inf"),[])
+
+        #If we have used up all our multipliers then we can't add any more value
+        if len(multipliers) == 0:
+            #print("no more multipliers")
+            return (0, [])
+
+        max_points = 0
+        final_arrangement = []
+        original_multipliers = multipliers.copy()
+        original_field = chosenPlayers.copy()
+        flexibile_field = chosenPlayers.copy()
+        for player in Battlefield.playerData['Util']:
+            
+            if player not in chosenPlayers:
+                new_money = money - player.cost
+                flexibile_field.append(player)
+                for mult in multipliers:
+                    multipliers.remove(mult)
+
+                    tuple_with_current_multiplier = Util.find_max_points_no_positions(new_money, flexibile_field, multipliers)
+                    
+                    points_w_curr_mult = tuple_with_current_multiplier[0]
+                    arrange_w_curr_mult = tuple_with_current_multiplier[1]
+                    curr_points = player.value * mult + points_w_curr_mult
+
+                    title = player.name + ": " + str(mult)
+                    arrange_w_curr_mult.append(title)
+                    arrangement = arrange_w_curr_mult
+
+                    if curr_points > max_points:
+                        max_points = curr_points
+                        final_arrangement = arrangement 
+                    multipliers = original_multipliers.copy()
+                flexibile_field = original_field.copy()
+
+        return (max_points, final_arrangement)
+                    
+
+
+
     def find_max_points(money,field, multipliers):
         final_tuple = Util.find_max_points_helper(money, field, multipliers)
         max_points = final_tuple[0]
@@ -155,13 +209,8 @@ class Util:
                 #print("\n")
                 #print("multipliers before: ", multipliers)
                 multipliers.remove(multiplier)
-                #print("multipliers after: ", multipliers)
-                #print("\n")
                 
                 tuple_with_current_multiplier = Util.find_max_points_helper(new_money, flexible_field, multipliers)
-                #print("POSITION AFTER: ", starting_position)
-                #print("AFTER CALL FIELD: ", flexible_field)
-                #print("Exit out of recursive call")
 
                 points_w_curr_mult = tuple_with_current_multiplier[0]
                 arrange_w_curr_mult = tuple_with_current_multiplier[1]
@@ -171,18 +220,13 @@ class Util:
                 arrangement = arrange_w_curr_mult
 
                 if curr_points > max_points:
-                    #print("UPDATED MAX: ", curr_points)
                     max_points = curr_points
                     final_arrangement = arrangement 
                 multipliers = original_multipliers.copy()
 
-                #print("Finished one multiplier: ", multiplier)
-
-            #print("Done with multipliers")
                 
-            #print("PLAYER I JUST FINISHED: ", player)
             flexible_field = original_field.copy()
-            #print("field after multipliers: ", field)
+
 
         return (max_points, final_arrangement)
 

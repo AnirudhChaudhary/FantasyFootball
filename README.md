@@ -46,3 +46,7 @@ just print statements.
 
 4. ** Algorithm Speedup **
 The algorithm that is used in this program could be made better (faster and more efficient) if implemented with a dynamic program. when there are large inputs, it may be more helpful to implement a dyamic program to save repeated calculations
+
+## BUGS ENCOUNTERED
+
+1. Ran into a really interesting bug where my field variable was being changed even after the function call was terminated. I think that the problem could be with the references related to the field variable. I fixed it by creating another field variable called flexible_field and that seemed to have resolved the issue.
