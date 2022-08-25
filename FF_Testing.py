@@ -33,7 +33,7 @@ def test_simple():
     inp = [['a', 'QB', 9, 1], ['b', 'RB', 1, 4], ['c', 'QB', 1, 5]]
     multipliers = [2,1]
 
-    FF.InputOutput.store_player_data_bulk(inp, ['QB', 'RB'])
+    FF.InputOutput.store_predefined_player_data(inp, ['QB', 'RB'])
     
     final = FF.Util.find_max_points(bank,[], multipliers, None)
 
@@ -48,7 +48,7 @@ def test_complex():
     inp = [['a', 'QB', 5, 3], ['b', 'RB', 3, 2], ['c', 'WR', 4, 5], ['d', 'QB', 6, 7], ['e', 'RB', 5,4], ['f', 'WR', 5, 10]]
     multipliers = [1,1,1]
 
-    FF.InputOutput.store_player_data_bulk(inp, ['QB', 'RB', 'WR'])
+    FF.InputOutput.store_predefined_player_data(inp, ['QB', 'RB', 'WR'])
     
     final = FF.Util.find_max_points(bank,[], multipliers)
 
@@ -61,6 +61,8 @@ def test_complex_one_position():
     This is meant to test if we can get the correct result if there is no restriction on positions of the players, simply picking the best 5 players.
     In the case that we are just picking based on the best 5 players, then we don't need to store by position. We can go straight into the calculation where 
     we make considerations about whether or not we pick the current player and if we do pick, then what multiplier do we give.
+    
+    [player, position, cost, value]
     '''
 
     bank = 10
@@ -69,15 +71,16 @@ def test_complex_one_position():
 
     multipliers = [2,1]
 
-    FF.InputOutput.store_player_data_bulk(inp, ['Util'])
+    FF.InputOutput.store_predefined_player_data(inp, ['Util'])
 
     FF.Battlefield.num_positions = len(multipliers)
 
+    points, assignment = FF.Util.find_max_points_no_positions(bank,[], multipliers)
     
-    final = FF.Util.find_max_points_no_positions(bank,[], multipliers)
+    assert(points == 17)
 
-
-    print(final)
+    print(points)
+    print(assignment)
     print("\n")
     FF.Battlefield.reset()
     return
@@ -87,6 +90,8 @@ def test_complex_one_position_multiple():
     This is meant to test if we can get the correct result if there is no restriction on positions of the players, simply picking the best 5 players.
     In the case that we are just picking based on the best 5 players, then we don't need to store by position. We can go straight into the calculation where 
     we make considerations about whether or not we pick the current player and if we do pick, then what multiplier do we give.
+    
+    [player, position, cost, value]
     '''
 
     bank = 10
@@ -95,7 +100,9 @@ def test_complex_one_position_multiple():
 
     multipliers = [2,1]
 
-    FF.InputOutput.store_player_data_bulk(inp, ['Util'])
+    positions = ['Util']
+
+    FF.InputOutput.store_predefined_player_data(inp, positions)
 
     FF.Battlefield.num_positions = len(multipliers)
 
@@ -121,7 +128,7 @@ def test_complex_one_position_multiple_money_manage():
 
     multipliers = [2,1.5,1.2,1,1]
 
-    FF.InputOutput.store_player_data_bulk(inp, ['Util'])
+    FF.InputOutput.store_predefined_player_data(inp, ['Util'])
 
     FF.Battlefield.num_positions = len(multipliers)
 
@@ -140,7 +147,7 @@ def test_multiple_multipliers():
 
     multipliers = [2, 1.5, 1]
 
-    FF.InputOutput.store_player_data_bulk(inp, ['QB', 'RB', 'WR'])
+    FF.InputOutput.store_predefined_player_data(inp, ['QB', 'RB', 'WR'])
     
     final = FF.Util.find_max_points(bank,[], multipliers, None)
 
@@ -152,7 +159,7 @@ def test_multiple_multipliers_small():
     inp = [['a', 'QB', 2, 1], ['b', 'RB', 1, 4]]
     multipliers = [2,1]
 
-    FF.InputOutput.store_player_data_bulk(inp, ['QB', 'RB'])
+    FF.InputOutput.store_predefined_player_data(inp, ['QB', 'RB'])
     
     final = FF.Util.find_max_points(bank,[], multipliers, None)
 
@@ -168,7 +175,7 @@ def test_regular():
     inp = [['a', 'QB', 1, 2], ['d','QB', 1, 6], ['f', 'RB', 7, 8], ['h', 'RB', 4, 100]]
 
     
-    FF.InputOutput.store_player_data_bulk(inp, ['QB', 'RB'])
+    FF.InputOutput.store_predefined_player_data(inp, ['QB', 'RB'])
 
     #print(Battlefield.playerData)
 
@@ -186,7 +193,7 @@ def test_positions_once():
     bank = 10
     inp = [['a', 'QB', 3,3], ['b', 'RB', 4,4]]
     
-    FF.InputOutput.store_player_data_bulk(inp, ['QB', 'RB']) #inputting looks to be fine
+    FF.InputOutput.store_predefined_player_data(inp, ['QB', 'RB']) #inputting looks to be fine
 
     print("final: ", FF.Util.find_max_points(bank, []))
     FF.Battlefield.reset()
@@ -199,7 +206,7 @@ def test_not_all_positions():
     inp = [['f', 'RB', 7, 8]]
 
     
-    FF.InputOutput.store_player_data_bulk(inp, ['QB', 'RB'])
+    FF.InputOutput.store_predefined_player_data(inp, ['QB', 'RB'])
 
     #print(Battlefield.playerData)
 
@@ -217,7 +224,7 @@ def test_multiple_positions():
     #[name, position, cost, value]
     inp = [['nooooo', 'QB', 10, 100], ['a', 'QB', 5, 25], ['b', 'RB', 5, 25]]
 
-    FF.InputOutput.store_player_data_bulk(inp, ['QB', 'RB'])
+    FF.InputOutput.store_predefined_player_data(inp, ['QB', 'RB'])
 
     final = FF.Util.find_max_points(bank, [])
 
@@ -236,7 +243,7 @@ def test_multiple_same_position():
     #[name, position, cost, value]
     inp = [['nooooo', 'QB', 10, 100], ['a', 'QB', 5, 25], ['b', 'RB1', 3, 25], ['c', 'RB2', 2, 35]]
 
-    FF.InputOutput.store_player_data_bulk(inp, ['QB', 'RB1', 'RB2'])
+    FF.InputOutput.store_predefined_player_data(inp, ['QB', 'RB1', 'RB2'])
 
     final = FF.Util.find_max_points(bank, [])
 

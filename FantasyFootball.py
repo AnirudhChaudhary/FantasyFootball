@@ -22,8 +22,8 @@ class Battlefield:
     playerData = {}
     num_positions = 0 
 
-    #This function resets the Battlefield back to it's default orientation. There was a bug where the testing function calls were 
-    #persistently affecting the battlefield over multiple function calls
+    #This function resets the Battlefield back to it's default orientation. 
+    #There was a bug where the testing function calls were persistently affecting the battlefield over multiple function calls
     def reset():
         Battlefield.playerData = {}
         Battlefield.num_positions = 0
@@ -36,7 +36,7 @@ class InputOutput:
     def store_player_data_manually():
         # TODO: FIX PLAYER INPUT (IE BAD INPUTS)
 
-        want_to_add_player, want_to_add_position = True, True
+        want_to_add_player= True
         num_positions = 0 
 
         while want_to_add_player:
@@ -59,37 +59,48 @@ class InputOutput:
                 want_to_add_player = True
                 print("\n")
 
-    """
-    This function is responsible for collecting user input data regarding players in bulk using predefined data in the input list.
-    """
-    def store_player_data_bulk(input_list, position_list):
+
+    def store_predefined_player_data(input_list, position_list):
+        """
+        This function is responsible for creating a battlefield based on user input data. All player information has to be specified beforehand.
+
+        TODO: Handle input validation
+        Input:
+            input_list -> List[List[String]]
+            position_list -> List[Positions]
+        
+        Return:
+            None
+        """
         counter = 0 
+        #initialize all the positions to be empty
         for position in position_list:
             Battlefield.playerData[position] = []
 
+        
         Battlefield.num_positions = len(position_list)
         num_players = len(input_list)
         while counter < num_players:
+            #parse the input data for player information
             current_player = input_list[counter]
             name = current_player[0]
             position = current_player[1]
             cost = current_player[2]
             points = current_player[3]
-
+            
+            #create player object and add to the battlefield
             p = Player(name, position, cost, points)
             Battlefield.playerData[position].append(p)
 
             counter += 1
-
-        #print(Battlefield.playerData)
 
         return
 
 class Util:
     """
     Given a list of players in player data and the allocated money, returns the max amount of points possible. This is not
-    taking into consideration who the player is. Rather this is just trying to find the max amount and then a different function
-    will try to find the order that created this max.
+    taking into consideration who the players are that result in the optimal. 
+    Rather this is just trying to find the max amount and then a different function will try to find the order that created this max.
 
     Input: 
         playerData -> List of player data [name, position, cost, value]
@@ -109,7 +120,8 @@ class Util:
         '''
         #print("Starting Function with: ", chosenPlayers)
 
-        #If we used too much money then we can't take the arrangement into consideration so return negative inf to make sure arrangement isn't considered
+        #Use too much money -> we can't take the arrangement into consideration so return negative inf to make sure arrangement isn't considered
+        #Used our money but we don't have the correct number of players
         if money < 0 or (money == 0 and len(chosenPlayers) != Battlefield.num_positions):
             #print("ran out of money")
             return (float("-inf"),[])
@@ -124,18 +136,24 @@ class Util:
         original_multipliers = multipliers.copy()
         original_field = chosenPlayers.copy()
         flexibile_field = chosenPlayers.copy()
+
+        #Go through all of the players that we have
         for player in Battlefield.playerData['Util']:
             
+            #only need to consider the players that we don't have already
             if player not in chosenPlayers:
                 new_money = money - player.cost
                 flexibile_field.append(player)
                 for mult in multipliers:
+                    #Remove it to create a new instance where we don't have as many multipliers
                     multipliers.remove(mult)
 
                     tuple_with_current_multiplier = Util.find_max_points_no_positions(new_money, flexibile_field, multipliers)
                     
                     points_w_curr_mult = tuple_with_current_multiplier[0]
                     arrange_w_curr_mult = tuple_with_current_multiplier[1]
+
+                    #Best we can do currently is to take the multiplier we chose and add the max without that multiplier (calculated in step above)
                     curr_points = player.value * mult + points_w_curr_mult
 
                     title = player.name + ": " + str(mult)
@@ -169,8 +187,6 @@ class Util:
 
 
     def find_max_points_helper(money, field, multipliers):
-        #print(multipliers)
-        #print("FIELD: ", field)
         # Ran out of money so we shouldn't include the player (maybe need to use negative infinity)
         if money < 0 or (money == 0 and len(field) != Battlefield.num_positions):
             #print("ah here")

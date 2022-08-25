@@ -22,13 +22,14 @@ There are two components to this project:
 2. ** Position Handling ** √
 3. ** Test Case Handling ** ~
 4. ** Algorithm Speedup ** +
+5. ** Data Wrangling **
 
 ## Objective Explanation
-1. ** Multipliers **
+1. **Multipliers** 
 Incorporate multipliers for players that we think are going to perform exceptionally well. This would be another case to add to the "dynamic program"
 For every player we consider adding the player as a normal player, adding as a multiplied player, or not adding the player
 
-2. ** Position Handling **
+2. **Position Handling**
 Need to consider players based off of their positions as well. Perhaps this could be done by creating another variable in the battlefield class
 that represents what players have already been picked. You could optimize player selection to only cases where you would actually need that player
 
@@ -40,12 +41,15 @@ Analytics Class: Takes in a list of players and the battlefield that we have and
 
 Be able to take a list of players, their costs, and their values and construct a list of players that are most optimal
 
-3. ** Test Case Handling / Code Management **
+3. **Test Case Handling / Code Management**
  Need to make the test case situation much better. Create a better framework for the way that I create tests. Need to make assertions rather than
 just print statements.
 
-4. ** Algorithm Speedup **
+4. **Algorithm Speedup**
 The algorithm that is used in this program could be made better (faster and more efficient) if implemented with a dynamic program. when there are large inputs, it may be more helpful to implement a dyamic program to save repeated calculations
+
+5. **Data Wrangling**
+Entering in data manually is cumbersome and inefficient. The next step would be to automate this process and pull from some kind of online API for fanduel.
 
 ## BUGS ENCOUNTERED
 

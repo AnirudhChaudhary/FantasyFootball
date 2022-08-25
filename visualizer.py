@@ -8,7 +8,7 @@ Core functionality:
 2. Run the code 
 3. Display the outputs
 """
-'''
+
 import tkinter as tk
 window= tk.Tk()
 
@@ -21,10 +21,3 @@ entry = tk.Entry()
 label.pack()
 entry.pack()
 window.mainloop()
-'''
-
-list = [1,2,3]
-
-for i in list:
-    list.remove(i)
-    print(i)
