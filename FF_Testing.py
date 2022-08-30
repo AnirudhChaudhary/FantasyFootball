@@ -15,19 +15,24 @@ def testing():
     #test_not_all_positions()
     #test_multiple_positions()
     #test_multiple_same_position()
-    #test_simple()
-    print("\n")
+    
+    test_simple()
+    test_complex()
     #test_multiple_multipliers()
     test_complex_one_position()
-    test_complex_one_position_multiple()
-    test_complex_one_position_multiple_money_manage()
+    #test_complex_one_position_multiple()
+    #test_complex_one_position_multiple_money_manage()
     #test_multiple_multipliers_small()
 
-"""
-Testing if position handling is working properly
-"""
 
 def test_simple():
+    """
+    Test if choosing between players that have the same position works. 
+
+    In this test, the program has to choose between QB 'a' and QB 'c' with the multiplier
+
+    [player, position, cost, value]
+    """
     bank = 10
 
     inp = [['a', 'QB', 9, 1], ['b', 'RB', 1, 4], ['c', 'QB', 1, 5]]
@@ -35,14 +40,19 @@ def test_simple():
 
     FF.InputOutput.store_predefined_player_data(inp, ['QB', 'RB'])
     
-    final = FF.Util.find_max_points(bank,[], multipliers, None)
+    final = FF.Util.find_max_points_no_positions(bank,[], multipliers )
+    print("FINAL SHOULD BE: 14")
 
-    assert(final[0] == 14)
-
-    print(final)
+    print("FINAL IS: ", final)
     print("\n")
+    FF.Battlefield.reset()
 
 def test_complex():
+    """
+    Testing if position handling is working properly
+
+    [player, position, cost, value]
+    """
     bank = 16
 
     inp = [['a', 'QB', 5, 3], ['b', 'RB', 3, 2], ['c', 'WR', 4, 5], ['d', 'QB', 6, 7], ['e', 'RB', 5,4], ['f', 'WR', 5, 10]]
@@ -50,11 +60,14 @@ def test_complex():
 
     FF.InputOutput.store_predefined_player_data(inp, ['QB', 'RB', 'WR'])
     
-    final = FF.Util.find_max_points(bank,[], multipliers)
+    final = FF.Util.find_max_points_no_positions(bank,[], multipliers)
 
+    print("FINAL SHOULD BE: 21")
 
-    print(final)
+    print("FINAL IS: ", final)
+
     print("\n")
+    FF.Battlefield.reset()
 
 def test_complex_one_position():
     '''
@@ -71,13 +84,16 @@ def test_complex_one_position():
 
     multipliers = [2,1]
 
-    FF.InputOutput.store_predefined_player_data(inp, ['Util'])
+    FF.InputOutput.store_predefined_player_data(inp, ['Util','Util'])
 
     FF.Battlefield.num_positions = len(multipliers)
 
     points, assignment = FF.Util.find_max_points_no_positions(bank,[], multipliers)
+    #points, assignment = FF.Util.find_max_points(bank,[], multipliers)
     
-    assert(points == 17)
+    print("FINAL SHOULD BE: 17")
+
+    print("FINAL IS: ", points)
 
     print(points)
     print(assignment)
@@ -149,7 +165,7 @@ def test_multiple_multipliers():
 
     FF.InputOutput.store_predefined_player_data(inp, ['QB', 'RB', 'WR'])
     
-    final = FF.Util.find_max_points(bank,[], multipliers, None)
+    final = FF.Util.find_max_points(bank,[], multipliers)
 
     print(final)
     print("Expected: 17")
@@ -161,7 +177,7 @@ def test_multiple_multipliers_small():
 
     FF.InputOutput.store_predefined_player_data(inp, ['QB', 'RB'])
     
-    final = FF.Util.find_max_points(bank,[], multipliers, None)
+    final = FF.Util.find_max_points(bank,[], multipliers)
 
     print(final)
     print("Expected: 9")

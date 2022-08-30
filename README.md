@@ -18,11 +18,11 @@ There are two components to this project:
 
 
 ## Objectives:
-1. ** Multipliers ** +
-2. ** Position Handling ** √
-3. ** Test Case Handling ** ~
-4. ** Algorithm Speedup ** +
-5. ** Data Wrangling **
+1. **Multipliers** +
+2. **Position Handling** √
+3. **Test Case Handling** ~
+4. **Algorithm Speedup** +
+5. **Data Wrangling**
 
 ## Objective Explanation
 1. **Multipliers** 

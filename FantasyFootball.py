@@ -21,12 +21,15 @@ class Battlefield:
     #This variable is set to be public because we want all Battlefield instances to access all players
     playerData = {}
     num_positions = 0 
+    positionData = {}
+
 
     #This function resets the Battlefield back to it's default orientation. 
     #There was a bug where the testing function calls were persistently affecting the battlefield over multiple function calls
     def reset():
         Battlefield.playerData = {}
         Battlefield.num_positions = 0
+        Battlefield.positionData = {}
 
 
 class InputOutput:
@@ -73,9 +76,15 @@ class InputOutput:
             None
         """
         counter = 0 
-        #initialize all the positions to be empty
+        #initialize the number of each position available
         for position in position_list:
-            Battlefield.playerData[position] = []
+            if position in Battlefield.positionData:
+                Battlefield.positionData[position] += 1
+            else:
+                Battlefield.positionData[position] = 1
+
+
+        Battlefield.positionList = position_list
 
         
         Battlefield.num_positions = len(position_list)
@@ -83,6 +92,7 @@ class InputOutput:
         while counter < num_players:
             #parse the input data for player information
             current_player = input_list[counter]
+
             name = current_player[0]
             position = current_player[1]
             cost = current_player[2]
@@ -90,7 +100,11 @@ class InputOutput:
             
             #create player object and add to the battlefield
             p = Player(name, position, cost, points)
-            Battlefield.playerData[position].append(p)
+
+            if position not in Battlefield.playerData:
+                Battlefield.playerData[position] = [p]
+            else:
+                Battlefield.playerData[position].append(p)
 
             counter += 1
 
@@ -125,6 +139,10 @@ class Util:
         if money < 0 or (money == 0 and len(chosenPlayers) != Battlefield.num_positions):
             #print("ran out of money")
             return (float("-inf"),[])
+        
+        for position in Battlefield.positionData:
+            if Battlefield.positionData[position] < 0:
+                return (float("-inf"), [])
 
         #If we have used up all our multipliers then we can't add any more value
         if len(multipliers) == 0:
@@ -137,34 +155,40 @@ class Util:
         original_field = chosenPlayers.copy()
         flexibile_field = chosenPlayers.copy()
 
-        #Go through all of the players that we have
-        for player in Battlefield.playerData['Util']:
-            
-            #only need to consider the players that we don't have already
-            if player not in chosenPlayers:
-                new_money = money - player.cost
-                flexibile_field.append(player)
-                for mult in multipliers:
-                    #Remove it to create a new instance where we don't have as many multipliers
-                    multipliers.remove(mult)
 
-                    tuple_with_current_multiplier = Util.find_max_points_no_positions(new_money, flexibile_field, multipliers)
-                    
-                    points_w_curr_mult = tuple_with_current_multiplier[0]
-                    arrange_w_curr_mult = tuple_with_current_multiplier[1]
+        
+        #keep going until we have filled up all of the positions
 
-                    #Best we can do currently is to take the multiplier we chose and add the max without that multiplier (calculated in step above)
-                    curr_points = player.value * mult + points_w_curr_mult
+        #check all of the positions that we have inputted
+        for position in Battlefield.positionData:
+            #if there is position that hasn't been filled, fill it
+            if Battlefield.positionData[position]:
+                for player in Battlefield.playerData[position]:
+                    #only need to consider the players that we don't have already
+                    if player not in chosenPlayers:
+                        new_money = money - player.cost
+                        flexibile_field.append(player)
+                        for mult in multipliers:
+                            #Remove it to create a new instance where we don't have as many multipliers
+                            multipliers.remove(mult)
 
-                    title = player.name + ": " + str(mult)
-                    arrange_w_curr_mult.append(title)
-                    arrangement = arrange_w_curr_mult
+                            tuple_with_current_multiplier = Util.find_max_points_no_positions(new_money, flexibile_field, multipliers)
+                            
+                            points_w_curr_mult = tuple_with_current_multiplier[0]
+                            arrange_w_curr_mult = tuple_with_current_multiplier[1]
 
-                    if curr_points > max_points:
-                        max_points = curr_points
-                        final_arrangement = arrangement 
-                    multipliers = original_multipliers.copy()
-                flexibile_field = original_field.copy()
+                            #Best we can do currently is to take the multiplier we chose and add the max without that multiplier (calculated in step above)
+                            curr_points = player.value * mult + points_w_curr_mult
+
+                            title = player.name + ": " + str(mult)
+                            arrange_w_curr_mult.append(title)
+                            arrangement = arrange_w_curr_mult
+
+                            if curr_points > max_points:
+                                max_points = curr_points
+                                final_arrangement = arrangement 
+                            multipliers = original_multipliers.copy()
+                        flexibile_field = original_field.copy()
 
         return (max_points, final_arrangement)
                     
@@ -186,28 +210,26 @@ class Util:
 
 
 
-    def find_max_points_helper(money, field, multipliers):
+    def find_max_points_helper(money, filled_positions, multipliers):
         # Ran out of money so we shouldn't include the player (maybe need to use negative infinity)
-        if money < 0 or (money == 0 and len(field) != Battlefield.num_positions):
-            #print("ah here")
+        if money < 0 or (money == 0 and len(filled_positions) != Battlefield.num_positions):
             return (float("-inf"),[])
         
-        if len(field) == Battlefield.num_positions:
-            #print("ah here 2")
+        if len(filled_positions) == Battlefield.num_positions:
             return (0, [])
         
         #Go through all of the possible positions and find one that we haven't set yet
-        for position in Battlefield.playerData.keys():
-                if position not in field:
-                        starting_position = position
-                        break
-        
+        # for position in Battlefield.positionList:
+        #         if position not in field:
+        #                 starting_position = position
+        #                 break
+        starting_position = filled_positions[0]
         #print("CHOOSING: ", starting_position)
         max_points = 0
         final_arrangement = []
         #temp field stores a copy of field so that we can add different position players
-        original_field = field.copy()
-        flexible_field = field.copy()
+        original_field = filled_positions.copy()
+        flexible_field = filled_positions.copy()
         #print(original_field)
         #print(field)
         #print(Battlefield.playerData[starting_position])
@@ -232,7 +254,8 @@ class Util:
                 arrange_w_curr_mult = tuple_with_current_multiplier[1]
                 curr_points = player.value * multiplier + points_w_curr_mult
 
-                arrange_w_curr_mult.append(player.name)
+                title = player.name + ": " + str(multiplier)
+                arrange_w_curr_mult.append(title)
                 arrangement = arrange_w_curr_mult
 
                 if curr_points > max_points:
